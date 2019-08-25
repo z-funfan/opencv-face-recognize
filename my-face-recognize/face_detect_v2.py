@@ -2,7 +2,7 @@ import face_recognition
 import cv2
 import os
 import sys
-
+from flow_counting import faceDetected
 
 outputPath = 'output/image'
 if len(sys.argv) >= 2:
@@ -25,8 +25,10 @@ def detectFaces(video, outputPath, cascPath, debug = False):
             if (os.path.isfile(filePath) & file.endswith('.jpg')):
                 known_face_names.append(os.path.splitext(file)[0])
                 fr_image = face_recognition.load_image_file(filePath)
-                known_face_imgs.append(fr_image)
-                known_face_encodings.append(face_recognition.face_encodings(fr_image)[0])
+                fr_encodings = face_recognition.face_encodings(fr_image)
+                if (len(fr_encodings) > 0):
+                    known_face_imgs.append(fr_image)
+                    known_face_encodings.append(fr_encodings[0])
 
     print('3. 已知人脸解析完成')
     print('4. 开始解析摄像头视频流')
@@ -75,6 +77,9 @@ def detectFaces(video, outputPath, cascPath, debug = False):
 
         # 展示图像
         for (top, right, bottom, left), name in zip(face_locations, face_names):
+            # 更新计数
+            faceDetected(name)
+
             # 保存原始图像，原始尺寸
             top *= 4
             right *= 4
@@ -98,14 +103,14 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         # 输出播放
         if (debug):
             cv2.imshow('粗暴的人脸识别', frame)
+            # Hit 'q' on the keyboard to quit!
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
         else: 
             ret, jpeg = cv2.imencode('.jpg', frame)
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
-        # Hit 'q' on the keyboard to quit!
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
 
     # When everything is done, release the capture
     print('正在关闭摄像头')

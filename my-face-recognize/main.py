@@ -6,6 +6,7 @@ import json
 
 # from faceDetection import detectFaces
 from face_detect_v2 import detectFaces
+from flow_counting import getCounts
 
 outputPath = 'output/image'
 if len(sys.argv) >= 2:
@@ -23,11 +24,7 @@ app = Flask(__name__, template_folder = resourcePath)
 @app.route('/')  # 主页
 def index():
     # jinja2模板，具体格式保存在index.html文件中
-    count = 0
-    for root,dirs,files in os.walk(resourcePath):    #遍历统计
-        for each in files:
-            count += 1   #统计文件夹下文件个数
-    return render_template('index.html', total_count = count)
+    return render_template('index.html')
 
 @app.route('/video_feed')  # 这个地址返回视频流响应
 def video_feed():
@@ -38,13 +35,10 @@ def video_feed():
     return Response(detectFaces(video_captures, outputPath, cascPath),
                     mimetype='multipart/x-mixed-replace; boundary=frame')  
 
-@app.route('/total_count')  # 这个地址返回视频流响应
+@app.route('/total_count')  # 客流统计接口
 def total_count():
-    count = 0
-    for root,dirs,files in os.walk(resourcePath):    #遍历统计
-        for each in files:
-            count += 1   #统计文件夹下文件个数
-    return Response(json.dumps({'count': count}),'text/plain') 
+     #统计文件夹下文件个数
+    return Response(json.dumps(getCounts()),'text/plain') 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=False, port=5000)  
