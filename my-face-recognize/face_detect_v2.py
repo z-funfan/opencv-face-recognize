@@ -4,14 +4,11 @@ import os
 import sys
 from flow_counting import faceDetected
 
-outputPath = 'output/image'
-if len(sys.argv) >= 2:
-    outputPath = sys.argv[1]
-
 def detectFaces(video, outputPath, cascPath, debug = False):
     print('1. 正在初始化人脸识别')
     num = 0   
-    process_this_frame = True
+    process_step = 6
+    process_this_frame = 1
     known_face_imgs = []
     known_face_encodings = []
     known_face_names = []
@@ -45,7 +42,8 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         rgb_small_frame = small_frame[:, :, ::-1]
 
         # 每2帧做一次人脸检测，提高效率
-        if process_this_frame:
+        if (process_this_frame % process_step == 0):
+            process_this_frame = 1
             face_locations = face_recognition.face_locations(rgb_small_frame)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
@@ -73,7 +71,7 @@ def detectFaces(video, outputPath, cascPath, debug = False):
                 face_names.append(name)
 
 
-        process_this_frame = not process_this_frame
+        process_this_frame += 1
 
         # 展示图像
         for (top, right, bottom, left), name in zip(face_locations, face_names):
@@ -102,11 +100,10 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         
         # 输出播放
         if (debug):
-            cv2.imshow('粗暴的人脸识别', frame)
             # Hit 'q' on the keyboard to quit!
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
+            yield frame
         else: 
             ret, jpeg = cv2.imencode('.jpg', frame)
             yield (b'--frame\r\n'
@@ -119,5 +116,10 @@ def detectFaces(video, outputPath, cascPath, debug = False):
 
 
 if __name__ == '__main__':
+    outputPath = 'output/image'
+    if len(sys.argv) >= 2:
+        outputPath = sys.argv[1]
     video_captures = cv2.VideoCapture(0)
-    detectFaces(video_captures, outputPath, '', True)
+    frameGenerator = detectFaces(video_captures, outputPath, '', True)
+    for frame in frameGenerator:
+        cv2.imshow('Face Recognize', frame)
