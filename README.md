@@ -237,6 +237,33 @@ _Face Recognition_ 库依赖 _dlib_ 库，因此windows上需要安装Visual Stu
 ```
 pip install face_recognition
 ```
+Linux 安装 dlib (enable GPU)
+```
+git clone https://github.com/davisking/dlib.git
+cd dlib
+mkdir build
+cd build
+cmake .. -DDLIB_USE_CUDA=1 -DUSE_AVX_INSTRUCTIONS=1
+cmake --build .
+cd ..
+python setup.py install --yes USE_AVX_INSTRUCTIONS --yes DLIB_USE_CUDA
+```
+
+Windows 安装 dlib (enable GPU)
+1. 需要安装 VS 2015 的 C/C++ 编译器，我的实践经验是不支持 VS 2017。
+2. 安装 CMake x64 版。
+3. 运行以下命令进行编译安装 dlib:
+```
+git clone https://github.com/davisking/dlib.git
+cd dlib
+mkdir build
+cd build
+cmake -G "Visual Studio 14 2015 Win64" -T host=x64 .. -DDLIB_USE_CUDA=1 -DUSE_AVX_INSTRUCTIONS=1
+cmake --build .
+cd ..
+python setup.py install --yes USE_AVX_INSTRUCTIONS --yes DLIB_USE_CUDA
+```
+
 
 客流统计
 ==
