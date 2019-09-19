@@ -1,7 +1,7 @@
 import face_recognition
 import cv2
 import os
-import sys
+import dlib
 from flow_counting import faceDetected
 
 def detectFaces(video, outputPath, cascPath, debug = False):
@@ -44,7 +44,10 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         # 每2帧做一次人脸检测，提高效率
         if (process_this_frame % process_step == 0):
             process_this_frame = 1
-            face_locations = face_recognition.face_locations(rgb_small_frame)
+            model = "hog"
+            if dlib.DLIB_USE_CUDA:
+                model = "cnn"
+            face_locations = face_recognition.face_locations(rgb_small_frame, model=model)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
             face_names = []
@@ -100,22 +103,16 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         
         # 输出播放
         if (debug):
-            # Hit 'q' on the keyboard to quit!
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
             yield frame
         else: 
             ret, jpeg = cv2.imencode('.jpg', frame)
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
 
-    # When everything is done, release the capture
-    print('正在关闭摄像头')
-    video.release()
-    cv2.destroyAllWindows()
-
 
 if __name__ == '__main__':
+    import sys
+
     outputPath = 'output/image'
     if len(sys.argv) >= 2:
         outputPath = sys.argv[1]
@@ -123,3 +120,11 @@ if __name__ == '__main__':
     frameGenerator = detectFaces(video_captures, outputPath, '', True)
     for frame in frameGenerator:
         cv2.imshow('Face Recognize', frame)
+        # Hit 'q' on the keyboard to quit!
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    # When everything is done, release the capture
+    print('正在关闭摄像头')
+    video_captures.release()
+    cv2.destroyAllWindows()
