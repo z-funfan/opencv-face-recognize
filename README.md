@@ -250,18 +250,31 @@ python setup.py install --yes USE_AVX_INSTRUCTIONS --yes DLIB_USE_CUDA
 ```
 
 Windows 安装 dlib (enable GPU)
-1. 需要安装 VS 2015 的 C/C++ 编译器，我的实践经验是不支持 VS 2017。
-2. 安装 CMake x64 版。
-3. 运行以下命令进行编译安装 dlib:
+1. 需要安装 VS 2015 的 C/C++ 编译器，亲测Window 7 安装2015，Windows 10安装2019，均可成功
+2.如果之前安装了dlib,先卸载dlib, pip uninstall dlib
+3.安装CUDA
+4 安装CUDNN
+CUDA下载: https://developer.nvidia.com/cuda-downloads
+CUDNN下载: https://developer.nvidia.com/rdp/cudnn-download
+注意:后者下载要注册英伟达开发帐号才可下载，下在完成后解压到CUDA Toolkit目录下就行
+参考: https://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html#install-windows
+
+运行`C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\extras\demo_suite\bandwidthTest.exe` 及`C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\extras\demo_suite\deviceQuery.exe`测试，得到结果`Result=PASS`表示成功
+5. 下载dlib并安装
 ```
-git clone https://github.com/davisking/dlib.git
-cd dlib
-mkdir build
-cd build
-cmake -G "Visual Studio 14 2015 Win64" -T host=x64 .. -DDLIB_USE_CUDA=1 -DUSE_AVX_INSTRUCTIONS=1
-cmake --build .
-cd ..
-python setup.py install --yes USE_AVX_INSTRUCTIONS --yes DLIB_USE_CUDA
+python setup.py install
+```
+6. 测试结果
+```
+>python
+Python 3.7.3 (v3.7.3:ef4ec6ed12, Mar 25 2019, 22:22:05) [MSC v.1916 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import dlib
+>>> print(dlib.DLIB_USE_CUDA)
+True
+>>> print(dlib.cuda.get_num_devices())
+1
+>>>
 ```
 
 
