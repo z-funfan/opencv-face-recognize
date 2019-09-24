@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <title>粗暴的客流检测</title>
+  </head>
+  <body>
+    <h1>粗暴的客流检测</h1>
+    <img src="{{ url_for('video_feed') }}">
+    <h2>本日客流：<span id="counts" /></h2>
+
+    {% block jquery  %}
+      <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+      <script>
+        function getCounts() {
+          $.get("{{ url_for('total_count') }}", function(data) {
+            var counts = 0
+            
+            Object.values(JSON.parse(data)).forEach(c => {
+              counts += c
+            })
+            document.getElementById("counts").textContent = counts
+          })
+          setTimeout(getCounts, 10000)
+        }
+        getCounts()
+      </script>
+    {% endblock %}
+  </body>
+</html>

@@ -2,13 +2,12 @@ import face_recognition
 import cv2
 import os
 import dlib
-import numpy as np
 from flow_counting import faceDetected
 
 def detectFaces(video, outputPath, cascPath, debug = False):
     print('1. 正在初始化人脸识别')
     num = 0   
-    process_step = 3
+    process_step = 6
     process_this_frame = 1
     known_face_imgs = []
     known_face_encodings = []
@@ -16,12 +15,6 @@ def detectFaces(video, outputPath, cascPath, debug = False):
     face_locations = []
     face_encodings = []
     face_names = []
-    model = "hog"
-    if dlib.DLIB_USE_CUDA:
-        model = "cnn"
-        print("启用GPU加速，使用CNN模型")
-    else:
-        print("未启用GPU加速，使用HOG模型")
 
     print('2. 正在读取已知人脸图片')
     for file in os.listdir(outputPath):
@@ -51,6 +44,9 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         # 每2帧做一次人脸检测，提高效率
         if (process_this_frame % process_step == 0):
             process_this_frame = 1
+            model = "hog"
+            if dlib.DLIB_USE_CUDA:
+                model = "cnn"
             face_locations = face_recognition.face_locations(rgb_small_frame, model=model)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
@@ -59,24 +55,23 @@ def detectFaces(video, outputPath, cascPath, debug = False):
 
                 # 对比人脸，找到最接近的人脸
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.5)
-                # # 模式1：判断是否与已知人脸匹配
-                # if True in matches:
-                #     first_match_index = matches.index(True)
-                #     name = known_face_names[first_match_index]
-
-                # 模式2：找到最接近的人脸
+                # 模式1：判断是否与已知人脸匹配
                 if True in matches:
-                    face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-                    best_match_index = np.argmin(face_distances)
-                    if matches[best_match_index]:
-                        name = known_face_names[best_match_index]
-                        face_names.append(name)
+                    first_match_index = matches.index(True)
+                    name = known_face_names[first_match_index]
                 else:
                     # 添加新人脸
                     name = ('%s%07d' % ('unknown', num))
                     known_face_names.append(name)
                     known_face_encodings.append(face_encoding)
                     num += 1
+
+                # # 模式2：找到最接近的人脸
+                # face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+                # best_match_index = np.argmin(face_distances)
+                # if matches[best_match_index]:
+                #     name = known_face_names[best_match_index]
+                face_names.append(name)
 
 
         process_this_frame += 1
