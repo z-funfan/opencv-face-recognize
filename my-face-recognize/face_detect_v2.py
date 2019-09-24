@@ -15,6 +15,12 @@ def detectFaces(video, outputPath, cascPath, debug = False):
     face_locations = []
     face_encodings = []
     face_names = []
+    model = "hog"
+    if dlib.DLIB_USE_CUDA:
+        model = "cnn"
+        print("启用GPU加速，使用CNN模型")
+    else:
+        print("未启用GPU加速，使用HOG模型")
 
     print('2. 正在读取已知人脸图片')
     for file in os.listdir(outputPath):
@@ -44,9 +50,6 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         # 每2帧做一次人脸检测，提高效率
         if (process_this_frame % process_step == 0):
             process_this_frame = 1
-            model = "hog"
-            if dlib.DLIB_USE_CUDA:
-                model = "cnn"
             face_locations = face_recognition.face_locations(rgb_small_frame, model=model)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
@@ -119,7 +122,7 @@ def detectFaces(video, outputPath, cascPath, debug = False):
 
 
 if __name__ == '__main__':
-    outputPath = '../output/image'
+    outputPath = os.path.join('output/image/', os.pardir)
     video_captures = cv2.VideoCapture(0)
     frameGenerator = detectFaces(video_captures, outputPath, '', True)
     for frame in frameGenerator:
