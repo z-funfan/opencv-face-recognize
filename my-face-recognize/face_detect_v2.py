@@ -1,9 +1,10 @@
-import face_recognition
-import cv2
+from PIL import Image
+
 import os
+import cv2
 import dlib
+import face_recognition
 import numpy as np
-from flow_counting import faceDetected
 
 def detectFaces(video, outputPath, cascPath, debug = False):
     print('1. 正在初始化人脸识别')
@@ -84,7 +85,7 @@ def detectFaces(video, outputPath, cascPath, debug = False):
         # 展示图像
         for (top, right, bottom, left), name in zip(face_locations, face_names):
             # 更新计数
-            faceDetected(name)
+            # faceDetected(name)
 
             # 保存原始图像，原始尺寸
             top *= 4
@@ -118,7 +119,7 @@ def detectFaces(video, outputPath, cascPath, debug = False):
 if __name__ == '__main__':
     import sys
 
-    outputPath = 'output/image'
+    outputPath = 'd:\sandbox-aw\github\opencv-face-recognize\output'
     if len(sys.argv) >= 2:
         outputPath = sys.argv[1]
     video_captures = cv2.VideoCapture(0)

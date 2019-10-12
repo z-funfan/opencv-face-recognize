@@ -1,11 +1,24 @@
-from flask import Flask, request, Response
 import json
-from face_compare import compare
+
+from flask import Flask, Response, request
 from werkzeug.utils import secure_filename
+import argparse
+
+from face_compare import compare
+
+# 启动参数
+parser = argparse.ArgumentParser(description="Face compare web service interface")
+parser.add_argument('--port', required=False, default=5000, type=int, help='Web service port, default is 5000')
+parser.add_argument('--model', required=False, default='hog', help='Face detect model, hog and cnn is available, default value is hog')
+parser.add_argument('--threshold', required=False,default=0.6,type=float,help='Default face compare distance threshold, the smaller the more accurate, deafult is 0.6')
+parser.add_argument('--conference', required=False,default=0.85,type=float,help='Default conference percentage of the result, once the result larger than the conference, return approved, deafult is 85%')
+args = parser.parse_args()
 
 UPLOAD_FOLDER = './uploads'
-MAX_DISTANCE = '0.52'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+MAX_DISTANCE = args.threshold
+MIN_ACONFERENCE = args.conference
+MODEL = args.model
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -40,17 +53,19 @@ def face_compare():
             targetImg and allowed_file(targetImg.filename):
 
             # compare faces and return result 
-            max_distance = eval(request.form.get('maxDistance', MAX_DISTANCE))
-            distance = compare(refImg,targetImg)
-            if distance < max_distance:
+            max_distance = eval(request.form.get('maxDistance', str(MAX_DISTANCE)))
+            min_conference = eval(request.form.get('conference', str(MIN_ACONFERENCE)))
+            conference = compare(refImg, targetImg, model=MODEL, face_match_threshold=max_distance)
+            if conference > min_conference:
                 suggest = 'approved'
             else:
                 suggest = 'rejected'
-            return restJsonResponse( {'distance': distance, 'suggestion': suggest}) 
+            return restJsonResponse( {'conference': conference, 'suggestion': suggest}) 
 
         else:
             return restJsonResponse('文件名不合法，请检查文件名或重命名文件', -101) 
     return
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, port=5000)  
+    PORT = args.port
+    app.run(host='0.0.0.0', debug=False, port=PORT)  
